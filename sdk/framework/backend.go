@@ -291,6 +291,19 @@ func (b *Backend) HandleRequest(ctx context.Context, req *logical.Request) (*log
 
 	switch resp {
 	case nil:
+		var deprecated []string
+		for fieldKey := range req.Data {
+			if path.Fields[fieldKey] != nil && path.Fields[fieldKey].Deprecated {
+				deprecated = append(deprecated, fieldKey)
+			}
+		}
+		if len(deprecated) > 0 {
+			resp = &logical.Response{
+				Data: map[string]interface{}{},
+			}
+			resp.AddWarning(fmt.Sprintf("Some provided parameter(s) are deprecated and may be removed in future Vault releases: %v", deprecated))
+		}
+
 	default:
 		// If fields supplied in the request are not present in the field schema
 		// of the path, add a warning to the response indicating that those
