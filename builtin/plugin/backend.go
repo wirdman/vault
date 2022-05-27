@@ -76,7 +76,7 @@ func Backend(ctx context.Context, conf *logical.BackendConfig) (logical.Backend,
 
 	// HACK: Cast to BackendPluginClient
 	if bpc, ok := raw.(*bplugin.BackendPluginClient); ok {
-		if bpc.NegotiatedVersion() < 5 {
+		if !bpc.AutoMTLSSupported() {
 			// Cleanup meta plugin backend
 			raw.Cleanup(ctx)
 		}
