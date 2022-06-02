@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"sync"
 
+	"github.com/hashicorp/go-multierror"
 	uuid "github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/vault/sdk/framework"
 	"github.com/hashicorp/vault/sdk/helper/consts"
@@ -49,13 +50,16 @@ func Backend(ctx context.Context, conf *logical.BackendConfig) (logical.Backend,
 
 	sys := conf.System
 
+	merr := &multierror.Error{}
 	// NewBackend with isMetadataMode set to false
 	raw, err := bplugin.NewBackend(ctx, name, pluginType, sys, conf, false, true)
 	if err != nil {
+		merr = multierror.Append(merr, err)
 		// NewBackend with isMetadataMode set to true
 		raw, err = bplugin.NewBackend(ctx, name, pluginType, sys, conf, true, false)
 		if err != nil {
-			return nil, err
+			merr = multierror.Append(merr, err)
+			return nil, merr
 		}
 	} else {
 		b.Backend = raw
